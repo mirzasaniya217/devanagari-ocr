@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devanagari OCR - Professional Text Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --bg-light: #f8fafc;
+            --bg-lighter: #f1f5f9;
+            --border-light: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.4s ease-out;
+            border-left: 4px solid;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.active {
+            display: block;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 28px;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+            border: 1px solid var(--border-light);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+            border: 2px dashed var(--primary-light);
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+        }
+
+        .file-input-wrapper label:hover {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+            box-shadow: var(--shadow-md), 0 0 20px rgba(37, 99, 235, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .file-input-wrapper label.dragover {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(37, 99, 235, 0.2);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-input-content {
+            text-align: center;
+        }
+
+        .file-input-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .file-input-text {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .file-input-subtext {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .filename-display {
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 600;
+            display: none;
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: #f0fdf4;
+            border-radius: 6px;
+            border-left: 3px solid var(--success);
+        }
+
+        .filename-display.active {
+            display: block;
+        }
+
+        .tip {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(124, 58, 237, 0.08) 100%);
+            border-left: 4px solid var(--primary);
+            padding: 14px 16px;
+            border-radius: 6px;
+            margin-top: 20px;
+            color: var(--text-dark);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .tip strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-recognize {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            flex: 1;
+            min-width: 180px;
+            box-shadow: var(--shadow-md), 0 0 20px rgba(37, 99, 235, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-recognize::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.5s ease;
+        }
+
+        .btn-recognize:hover:not(:disabled) {
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(37, 99, 235, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .btn-recognize:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .btn-recognize:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            background: var(--bg-lighter);
+            color: var(--text-dark);
+            border: 2px solid var(--border-light);
+            min-width: 140px;
+        }
+
+        .btn-clear:hover {
+            background: var(--border-light);
+            border-color: var(--text-muted);
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 24px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            margin: 0 auto 12px;
+            border: 3px solid var(--border-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Content Boxes */
+        .box {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 28px;
+            border: 1px solid var(--border-light);
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .box:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .box:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .box:hover {
+            box-shadow: var(--shadow-xl), 0 0 40px rgba(37, 99, 235, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .box h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .box h2::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            width: 0;
+            transition: width 0.4s ease;
+        }
+
+        .box:hover h2::before {
+            width: 60px;
+        }
+
+        /* Text Output */
+        pre {
+            background: linear-gradient(135deg, var(--bg-lighter) 0%, var(--bg-light) 100%);
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 15px;
+            color: var(--text-dark);
+            border-left: 4px solid var(--primary);
+            line-height: 1.8;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            display: none;
+        }
+
+        pre::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        pre::-webkit-scrollbar-track {
+            background: var(--bg-lighter);
+            border-radius: 10px;
+        }
+
+        pre::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 10px;
+        }
+
+        pre::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Character Details */
+        #characterDetails {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        #characterDetails::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #characterDetails::-webkit-scrollbar-track {
+            background: var(--bg-lighter);
+            border-radius: 10px;
+        }
+
+        #characterDetails::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 10px;
+        }
+
+        #characterDetails::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        .char-block {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-light);
+            transition: var(--transition);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .char-block:last-child {
+            border-bottom: none;
+        }
+
+        .char-block:hover {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+            border-left: 3px solid var(--primary);
+            padding-left: 13px;
+        }
+
+        .char-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .char-position {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 12px;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .char-predicted {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text-dark);
+            letter-spacing: 0.5px;
+        }
+
+        .confidence {
+            display: inline-block;
+            font-size: 13px;
+            padding: 6px 10px;
+            background: var(--bg-lighter);
+            border-radius: 6px;
+            margin-right: 8px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--primary-light);
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .confidence:hover {
+            transform: translateX(4px);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+        }
+
+        .confidence-char {
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .confidence-value {
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        .confidence-high {
+            color: var(--success);
+            border-left-color: var(--success);
+        }
+
+        .confidence-medium {
+            color: var(--warning);
+            border-left-color: var(--warning);
+        }
+
+        .confidence-low {
+            color: var(--error);
+            border-left-color: var(--error);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 16px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%);
+            border-radius: 8px;
+            border: 1px dashed var(--border-light);
+            font-style: italic;
+            line-height: 1.8;
+        }
+
+        /* Action Buttons */
+        .copy-btn {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            color: white;
+            padding: 10px 20px;
+            font-size: 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 16px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm), 0 0 15px rgba(37, 99, 235, 0.2);
+            display: none;
+        }
+
+        .copy-btn:hover {
+            box-shadow: var(--shadow-md), 0 0 20px rgba(37, 99, 235, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.active {
+            display: inline-block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .input-section,
+            .box {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+                padding: 14px;
+            }
+
+            .char-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .char-block {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+
+            .input-section,
+            .box {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+
+            .box h2 {
+                font-size: 18px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .file-input-wrapper label {
+                min-height: 100px;
+            }
+
+            .file-input-icon {
+                font-size: 36px;
+            }
+
+            .file-input-text {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🔤 Devanagari OCR</h1>
+        <p>Advanced Text Recognition & Analysis</p>
+    </div>
+
+    <div class="alert error" id="errorMessage"></div>
+    <div class="alert success" id="successMessage"></div>
+
+    <div class="input-section">
+        <div class="file-input-wrapper">
+            <label for="fileInput" id="fileLabel" class="file-input-wrapper-label">
+                <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/gif">
+                <div class="file-input-content">
+                    <span class="file-input-icon">📁</span>
+                    <div class="file-input-text">Click to upload or drag & drop</div>
+                    <div class="file-input-subtext">PNG, JPG, GIF up to 10MB</div>
+                </div>
+            </label>
+            <div class="filename-display" id="filenameDisplay"></div>
+        </div>
+
+        <div class="tip">
+            💡 <strong>Pro Tip:</strong> For best results, use clear images with good contrast and proper lighting. Multiple lines of Devanagari text are supported.
+        </div>
+
+        <div class="button-group">
+            <button class="btn-recognize" id="recognizeBtn" onclick="recognize()">🚀 Recognize Text</button>
+            <button class="btn-clear" onclick="clearAll()">🔄 Clear All</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">⏳ Processing your image...</div>
+        </div>
+    </div>
+
+    <div class="box">
+        <h2>📝 Recognized Text</h2>
+        <div id="overallConfidence" class="confidence confidence-medium" style="display:none; margin-bottom:14px;">
+            Overall OCR Confidence: <strong id="overallConfidenceValue">--%</strong>
+        </div>
+        <pre id="recognizedText"></pre>
+        <div class="empty-state" id="textEmpty">No text recognized yet</div>
+        <button class="copy-btn" id="copyTextBtn" onclick="copyText()">📋 Copy Text</button>
+    </div>
+
+    <div class="box">
+        <h2>🔍 Character Details</h2>
+        <div id="characterDetails" class="empty-state">No character data available</div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById("fileInput");
+    const fileLabel = document.getElementById("fileLabel");
+    const filenameDisplay = document.getElementById("filenameDisplay");
+    const recognizeBtn = document.getElementById("recognizeBtn");
+    const loading = document.getElementById("loading");
+    const recognizedText = document.getElementById("recognizedText");
+    const textEmpty = document.getElementById("textEmpty");
+    const copyTextBtn = document.getElementById("copyTextBtn");
+    const characterDetails = document.getElementById("characterDetails");
+    const errorMessage = document.getElementById("errorMessage");
+    const successMessage = document.getElementById("successMessage");
+
+    // Drag and Drop
+    fileLabel.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        fileLabel.classList.add("dragover");
+    });
+
+    fileLabel.addEventListener("dragleave", () => {
+        fileLabel.classList.remove("dragover");
+    });
+
+    fileLabel.addEventListener("drop", (e) => {
+        e.preventDefault();
+        fileLabel.classList.remove("dragover");
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            updateFileName();
+        }
+    });
+
+    fileInput.addEventListener("change", updateFileName);
+
+    function updateFileName() {
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const size = (file.size / 1024).toFixed(2);
+            filenameDisplay.textContent = `✓ ${file.name} (${size} KB)`;
+            filenameDisplay.classList.add("active");
+            recognizeBtn.disabled = false;
+        }
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.add("active", "error");
+        successMessage.classList.remove("active");
+        setTimeout(() => {
+            errorMessage.classList.remove("active");
+        }, 5000);
+    }
+
+    function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.classList.add("active", "success");
+        errorMessage.classList.remove("active");
+        setTimeout(() => {
+            successMessage.classList.remove("active");
+        }, 5000);
+    }
+
+    function getConfidenceClass(confidence) {
+        const conf = parseFloat(confidence);
+        if (conf >= 80) return 'confidence-high';
+        if (conf >= 50) return 'confidence-medium';
+        return 'confidence-low';
+    }
+
+    async function recognize() {
+        if (!fileInput.files.length) {
+            showError("❌ Please select an image first");
+            return;
+        }
+
+        loading.style.display = "block";
+        recognizeBtn.disabled = true;
+        recognizedText.style.display = "none";
+        textEmpty.style.display = "block";
+        copyTextBtn.classList.remove("active");
+        characterDetails.innerHTML = '';
+
+        try {
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const response = await fetch("http://127.0.0.1:8000/ocr", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("OCR RESPONSE:", data);
+
+            // -------- OVERALL CONFIDENCE (HONEST AVERAGE) --------
+            if (data.characters && data.characters.length > 0) {
+                let sum = 0;
+                let count = 0;
+
+                data.characters.forEach(ch => {
+                    if (ch.candidates && ch.candidates.length > 0) {
+                        sum += parseFloat(ch.candidates[0].confidence);
+                        count += 1;
+                    }
+                });
+
+                if (count > 0) {
+                    const avgConfidence = (sum / count).toFixed(2);
+                    const confDiv = document.getElementById("overallConfidence");
+                    const confValue = document.getElementById("overallConfidenceValue");
+
+                    confValue.innerText = `${avgConfidence}%`;
+
+                    // Color logic (HONEST)
+                    confDiv.classList.remove("confidence-high", "confidence-medium", "confidence-low");
+
+                    if (avgConfidence >= 70) {
+                        confDiv.classList.add("confidence-high");
+                        confDiv.innerHTML = `Overall OCR Confidence: <strong>${avgConfidence}%</strong> (High)`;
+                    } else if (avgConfidence >= 50) {
+                        confDiv.classList.add("confidence-medium");
+                        confDiv.innerHTML = `Overall OCR Confidence: <strong>${avgConfidence}%</strong> (Moderate)`;
+                    } else {
+                        confDiv.classList.add("confidence-low");
+                        confDiv.innerHTML = `Overall OCR Confidence: <strong>${avgConfidence}%</strong> (Low)`;
+                    }
+
+                    confDiv.style.display = "inline-block";
+                }
+            }
+
+            // Display Text
+            const text = data.recognized_text || "No text recognized";
+            recognizedText.innerText = text;
+
+            if (text !== "No text recognized") {
+                recognizedText.style.display = "block";
+                textEmpty.style.display = "none";
+                copyTextBtn.classList.add("active");
+                showSuccess("✓ Text recognized successfully!");
+            } else {
+                textEmpty.style.display = "block";
+                showError("⚠️ No text detected in the image");
+            }
+
+            // Character Details
+            characterDetails.innerHTML = "";
+
+            if (!data.characters || data.characters.length === 0) {
+                characterDetails.innerHTML = '<div class="empty-state">No character data available</div>';
+                return;
+            }
+
+            data.characters.forEach(ch => {
+                const div = document.createElement("div");
+                div.className = "char-block";
+
+                let html = `<div class="char-header">
+                    <span class="char-position">${ch.position}</span>
+                    <span class="char-predicted">${ch.predicted}</span>
+                </div>`;
+
+                if (ch.candidates && ch.candidates.length > 0) {
+                    const candidatesHtml = ch.candidates.map(c => {
+                        const confClass = getConfidenceClass(c.confidence);
+                        return `<div class="confidence ${confClass}"><span class="confidence-char">${c.char}</span><span class="confidence-value">${c.confidence}%</span></div>`;
+                    }).join('');
+                    html += candidatesHtml;
+                }
+
+                div.innerHTML = html;
+                characterDetails.appendChild(div);
+            });
+
+        } catch (error) {
+            showError(`❌ Error: ${error.message}`);
+            console.error("OCR Error:", error);
+        } finally {
+            loading.style.display = "none";
+            recognizeBtn.disabled = false;
+        }
+    }
+
+    function copyText() {
+        const text = recognizedText.innerText;
+        if (!text) {
+            showError("❌ Nothing to copy");
+            return;
+        }
+
+        navigator.clipboard.writeText(text).then(() => {
+            showSuccess("✓ Text copied to clipboard!");
+        }).catch(() => {
+            showError("❌ Failed to copy text");
+        });
+    }
+
+    function clearAll() {
+        fileInput.value = "";
+        filenameDisplay.classList.remove("active");
+        recognizedText.style.display = "none";
+        textEmpty.style.display = "block";
+        copyTextBtn.classList.remove("active");
+        characterDetails.innerHTML = '<div class="empty-state">No character data available</div>';
+        errorMessage.classList.remove("active");
+        successMessage.classList.remove("active");
+        document.getElementById("overallConfidence").style.display = "none";
+        recognizeBtn.disabled = true;
+    }
+</script>
+
+</body>
+</html>

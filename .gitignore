@@ -1,0 +1,32 @@
+# Python cache__pycache__/*.pyc*.pyo*.pyd# Virtual environment (DO NOT PUSH)venv/.env/# OS files.DS_Store# Jupyter.ipynb_checkpoints/# Temporary OCR outputstemp_uploads/output_lines/tmp/debug_binary.png# Logs*.log# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment (DO NOT PUSH)
+venv/
+.env/
+
+# OS files
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Temporary OCR outputs
+temp_uploads/
+output_lines/
+tmp/
+debug_binary.png
+
+# Logs
+*.log
+# Training data (DO NOT PUSH)
+data/
+
+# Jupyter notebooks
+*.ipynb
+
+# Model backups (keep only final model)
+model/*.h5.bak
